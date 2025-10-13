@@ -14,17 +14,11 @@ const CreateCategory = () => {
     register,
   } = useForm();
 
-  const [filterAttributes, setFilterAttributes] = useState([]);
-  const [attrInput, setAttrInput] = useState("");
+ 
   const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
 
-  const handleAddAttribute = () => {
-    if (attrInput && !filterAttributes.includes(attrInput)) {
-      setFilterAttributes([...filterAttributes, attrInput]);
-      setAttrInput("");
-    }
-  };
+ 
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -35,14 +29,14 @@ const CreateCategory = () => {
     try {
       const formData = new FormData();
       formData.append("category", data.category);
-      formData.append("filterAttributes", JSON.stringify(filterAttributes));
+     
       if (image) formData.append("image", image);
       const response = await axiosInstance.post(
         "/create-category",
         formData
       );
       reset();
-      setFilterAttributes([]);
+     
       if (image) URL.revokeObjectURL(image);
       setImage(null);
       navigate("/all-category");
@@ -92,34 +86,7 @@ const CreateCategory = () => {
             )}
           </div>
 
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter Attribute
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add Filter Attribute"
-                value={attrInput}
-                onChange={(e) => setAttrInput(e.target.value)}
-                className="flex-1 p-2 border-fuchsia-400 border rounded-md focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-              />
-              <button
-                type="button"
-                onClick={handleAddAttribute}
-                className="px-3 py-1 bg-blue-500 text-white rounded"
-              >
-                Add
-              </button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {filterAttributes.map((attr) => (
-                <span key={attr} className="bg-gray-200 px-2 py-1 rounded">
-                  {attr}
-                </span>
-              ))}
-            </div>
-          </div>
+         
 
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">

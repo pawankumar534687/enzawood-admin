@@ -6,8 +6,7 @@ import axiosInstance from "../utils/axiosInstance";
 const EditCategory = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [attrInput, setAttrInput] = useState("");
-  const [filterAttributes, setFilterAttributes] = useState([]);
+ 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
 
@@ -26,7 +25,7 @@ const EditCategory = () => {
         const data = res.data;
 
         reset({ category: data.category });
-        setFilterAttributes(data.filterAttributes || []);
+       
         setPreview(data.image?.url || null);
       } catch (err) {
         console.error(err);
@@ -37,18 +36,10 @@ const EditCategory = () => {
   }, [id, reset]);
 
  
-  const handleAddAttribute = () => {
-    if (attrInput.trim() !== "" && !filterAttributes.includes(attrInput)) {
-      setFilterAttributes([...filterAttributes, attrInput.trim()]);
-      setAttrInput("");
-    }
-  };
+ 
 
  
-  const handleRemoveAttribute = (attr) => {
-    setFilterAttributes(filterAttributes.filter((a) => a !== attr));
-  };
-
+ 
  
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -65,7 +56,7 @@ const EditCategory = () => {
       const formData = new FormData();
 
       formData.append("category", data.category);
-      formData.append("filterAttributes", JSON.stringify(filterAttributes));
+     
 
       
       if (image) {
@@ -121,46 +112,7 @@ const EditCategory = () => {
             </div>
 
             {/* ✅ Filter Attributes */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filter Attributes
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add Filter Attribute"
-                  value={attrInput}
-                  onChange={(e) => setAttrInput(e.target.value)}
-                  className="flex-1 p-2 border-fuchsia-400 border rounded-md focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAttribute}
-                  className="px-3 py-1 bg-blue-500 text-white rounded"
-                >
-                  Add
-                </button>
-              </div>
-
-              {/* ✅ Attribute Chips with Remove Option */}
-              <div className="mt-2 flex flex-wrap gap-2">
-                {filterAttributes.map((attr, i) => (
-                  <span
-                    key={i}
-                    className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-2"
-                  >
-                    {attr}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAttribute(attr)}
-                      className="text-red-500 font-bold"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
+           
 
             {/* ✅ Image Upload */}
             <div className="flex-1">
