@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+
 const CreateProduct = () => {
   const [allsubcategory, setallsubcategory] = useState([]);
   const [categorys, setCategorys] = useState([]);
@@ -25,6 +26,12 @@ const CreateProduct = () => {
     setValue("images", files);
   };
 
+  useEffect(() => {
+    return () => {
+      previewImages.forEach((img) => URL.revokeObjectURL(img.url));
+    };
+  }, [previewImages]);
+
   const {
     register,
     handleSubmit,
@@ -36,13 +43,8 @@ const CreateProduct = () => {
 
   useEffect(() => {
     const getsubcategory = async () => {
-     
-      const response = await axiosInstance.get(
-        "/all-subcategory",
-       
-      );
+      const response = await axiosInstance.get("/all-subcategory");
       setallsubcategory(response.data);
-      console.log(response.data);
     };
     getsubcategory();
   }, []);
@@ -61,8 +63,9 @@ const CreateProduct = () => {
         }
       }
       const res = await axiosInstance.post(
-        "/create-product",formData,
-        
+        "/create-product",
+        formData,
+
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -70,11 +73,12 @@ const CreateProduct = () => {
 
       reset();
       navigate("/all-products");
-      setLoading(false);
+
       toast.success("Product created successfully!");
     } catch (error) {
       console.error(error);
       alert("Error creating product");
+    } finally {
       setLoading(false);
     }
   };
@@ -90,13 +94,8 @@ const CreateProduct = () => {
 
   useEffect(() => {
     const getallcategory = async () => {
-     
-      const response = await axiosInstance.get(
-        "/all-category",
-       
-      );
+      const response = await axiosInstance.get("/all-category");
       setCategorys(response.data);
-      console.log(response.data);
     };
     getallcategory();
   }, []);
@@ -178,13 +177,26 @@ const CreateProduct = () => {
           <label className="block  font-medium text-gray-700">
             Description
           </label>
-          <input
-            {...register("description", { required: true })}
+          <textarea
+            {...register("description")}
             placeholder="Description"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
           {errors.description && (
             <p className="text-red-600">Description is required</p>
+          )}
+        </div>
+        <div>
+          <label className="block  font-medium text-gray-700">
+            Product Information
+          </label>
+          <textarea
+            {...register("productinformation")}
+            placeholder="Product Information"
+            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
+          />
+          {errors.productinformation && (
+            <p className="text-red-600">Product Information is required</p>
           )}
         </div>
 
@@ -195,7 +207,6 @@ const CreateProduct = () => {
             placeholder="Material"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
-         
         </div>
 
         <div>
@@ -205,45 +216,41 @@ const CreateProduct = () => {
             placeholder="Color"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
-         
         </div>
         <div>
-          <label className="block  font-medium text-gray-700">Seating Capacity</label>
+          <label className="block  font-medium text-gray-700">
+            Seating Capacity
+          </label>
           <input
-            {...register("seatingCapacity", { required: true })}
+            {...register("seatingCapacity")}
             placeholder="Seating Capacity"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
-         
         </div>
         <div>
           <label className="block  font-medium text-gray-700">Size</label>
           <input
-            {...register("size", { required: true })}
+            {...register("size")}
             placeholder="Size"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
-         
         </div>
         <div>
           <label className="block  font-medium text-gray-700">Brand</label>
           <input
-            {...register("brand", { required: true })}
+            {...register("brand")}
             placeholder="Brand"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
-          
         </div>
         <div>
           <label className="block  font-medium text-gray-700">Style</label>
           <input
-            {...register("style", { required: true })}
+            {...register("style")}
             placeholder="Style"
             className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
           />
-         
         </div>
-       
 
         <div>
           <label className="block  font-medium text-gray-700">Price</label>

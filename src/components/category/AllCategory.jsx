@@ -85,9 +85,7 @@ const AllCategory = () => {
               <th className="border border-gray-300 px-4 py-2 text-left">
                 Name
               </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                filterAttributes
-              </th>
+             
               <th className="border border-gray-300 px-4 py-2 text-left">
                 Image
               </th>
@@ -108,11 +106,7 @@ const AllCategory = () => {
                 <td className="border border-gray-300 px-4 py-2">
                   {item.category}
                 </td>
-                <td className=" flex gap-12  px-4 py-2">
-                  {item.filterAttributes.map((attr, index) => (
-                    <div key={index}>{attr}</div>
-                  ))}
-                </td>
+                
 
                 <td className="border border-gray-300 px-4 py-2">
                   <img className="w-24 h-12" src={item.image?.url} alt="" />
