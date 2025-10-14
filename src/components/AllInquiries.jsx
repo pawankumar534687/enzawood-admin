@@ -14,7 +14,7 @@ const AllMessages = () => {
 
   const deletemessage = async (id) => {
     try {
-      const response = await axios.delete(
+      const response = await axiosInstance.delete(
         `/delete-inquiry/${id}`);
 
       getmessage();
