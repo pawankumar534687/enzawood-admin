@@ -19,18 +19,21 @@ const CreateProduct = () => {
     const previews = files.map((file) => ({
       file,
       url: URL.createObjectURL(file),
-      local: true,
     }));
 
-    setPreviewImages(previews);
-    setValue("images", files);
-  };
+    
+    setPreviewImages((prev) => [...prev, ...previews]);
 
-  useEffect(() => {
-    return () => {
-      previewImages.forEach((img) => URL.revokeObjectURL(img.url));
-    };
-  }, [previewImages]);
+    
+    setValue(
+      "images",
+      [
+        ...(getValues("images") || []), 
+        ...files, 
+      ],
+      { shouldValidate: true }
+    );
+  };
 
   const {
     register,
@@ -38,6 +41,7 @@ const CreateProduct = () => {
     formState: { errors },
     watch,
     setValue,
+    getValues,
     reset,
   } = useForm();
 
