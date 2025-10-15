@@ -3,131 +3,170 @@ import { useForm } from "react-hook-form";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axiosInstance from "../utils/axiosInstance";
+
 const EditProducts = () => {
   const [allsubcategory, setAllSubcategory] = useState([]);
   const [categorys, setCategorys] = useState([]);
   const [product, setProduct] = useState(null);
-  const [previewImages, setPreviewImages] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-   const [loading, setLoading] = useState(false);
-
+  const [variants, setVariants] = useState([{ colorName: "", images: [] }]);
+  const [loading, setLoading] = useState(false);
+  const [removedImagesArray, setRemovedImagesArray] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
     setValue,
     watch,
+    formState: { errors },
   } = useForm();
-
   const price = watch("price");
   const discount = watch("discount");
 
+  // Calculate final price
   useEffect(() => {
     if (price && discount >= 0) {
       const discountedPrice = price - (price * discount) / 100;
-      setValue("finalprice", discountedPrice.toFixed(2));
+      setValue("finalprice", Math.round(discountedPrice));
     }
   }, [price, discount, setValue]);
 
+  // Fetch categories, subcategories
   useEffect(() => {
     const fetchCategories = async () => {
-     
-      const res = await axiosInstance.get("/all-category"
-        
-      );
+      const res = await axiosInstance.get("/all-category");
       setCategorys(res.data);
     };
     const fetchSubCategories = async () => {
-     
-      const res = await axiosInstance.get(
-        "/all-subcategory",
-       
-      );
+      const res = await axiosInstance.get("/all-subcategory");
       setAllSubcategory(res.data);
     };
     fetchCategories();
     fetchSubCategories();
   }, []);
 
+  // Fetch product data
   useEffect(() => {
     const fetchProduct = async () => {
-      
-      const res = await axiosInstance.get(
-        `/edit-product-data/${id}`,
-        
-      );
+      const res = await axiosInstance.get(`/edit-product-data/${id}`);
+      console.log("Product variants:", res.data.variants);
       setProduct(res.data);
-      setValue("productName", res.data.productName);
-      setValue("description", res.data.description);
-      setValue("productinformation", res.data.productinformation);
-      setValue("material", res.data.material);
-      setValue("color", res.data.color);
-      setValue("seatingCapacity", res.data.seatingCapacity);
-      setValue("size", res.data.size);
-      setValue("brand", res.data.brand);
-      setValue("price", res.data.price);
-      setValue("style", res.data.style);
-      setValue("category", res.data.category);
-      setValue("subCategory", res.data.subCategory);
-      setValue("price", res.data.price);
-      setValue("discount", res.data.discount || 0);
-      setValue("finalprice", res.data.finalprice);
-      setPreviewImages(res.data.images || []);
+
+      // Set normal fields
+      const fields = [
+        "productName",
+        "description",
+        "productinformation",
+        "material",
+        "seatingCapacity",
+        "size",
+        "brand",
+        "style",
+        "category",
+        "subCategory",
+        "price",
+        "discount",
+        "finalprice",
+      ];
+      fields.forEach((f) => setValue(f, res.data[f] || ""));
+
+      // Set variants from backend
+      if (res.data.variants && res.data.variants.length > 0) {
+        setVariants(
+          res.data.variants.map((v) => ({
+            colorName: v.colorName,
+            images: v.images.map((img) => ({
+              url: img.url,
+              public_id: img.public_id || "",
+              local: false,
+            })),
+          }))
+        );
+      } else {
+        setVariants([{ colorName: "", images: [] }]);
+      }
     };
     fetchProduct();
   }, [id, setValue]);
 
-  const onSubmit = async (data) => {
-    setLoading(true)
-    try {
-      const formData = new FormData();
-
-      for (let key in data) {
-        if (key !== "images") {
-          formData.append(key, data[key]);
-        }
-      }
-
-      selectedFiles.forEach((file) => {
-        formData.append("images", file);
-      });
-
-      previewImages.forEach((img) => {
-        formData.append("oldImages[]", JSON.stringify(img));
-      });
-     
-      await axiosInstance.put(
-        `/edit-product/${id}`,
-
-        formData,
-        
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      navigate("/all-products");
-       setLoading(false)
-      toast.success("Product updated successfully!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update product");
-      setLoading(false)
-    }
+  const handleVariantChange = (index, key, value) => {
+    const updated = [...variants];
+    updated[index][key] = value;
+    setVariants(updated);
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setSelectedFiles(files);
-
-    const previews = files.map((file) => ({
+  const handleVariantImages = (index, files) => {
+    const updated = [...variants];
+    const previews = Array.from(files).map((file) => ({
+      file,
       url: URL.createObjectURL(file),
       local: true,
     }));
+    updated[index].images = [
+      ...updated[index].images.filter((img) => !img.local),
+      ...previews,
+    ];
+    setVariants(updated);
+  };
 
-    setPreviewImages(previews);
+  const addVariant = () =>
+    setVariants([...variants, { colorName: "", images: [] }]);
+  const removeVariant = (index) =>
+    setVariants(variants.filter((_, i) => i !== index));
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+
+      // Append normal fields
+      Object.keys(data).forEach((key) => {
+        if (!["images"].includes(key)) formData.append(key, data[key]);
+      });
+
+      // Append variant images
+      variants.forEach((variant) => {
+        if (!variant.colorName) return;
+
+        // 🟢 1️⃣ Upload new images
+        variant.images
+          .filter((img) => img.local)
+          .forEach((img) => {
+            formData.append(`variant_${variant.colorName}`, img.file);
+          });
+
+        // 🟢 2️⃣ Keep old images together by color
+        const oldImgs = variant.images
+          .filter((img) => !img.local)
+          .map((img, idx) => ({
+            url: img.url,
+            public_id: img.public_id || img.url.split("/").pop() + "_" + idx,
+          }));
+
+        if (oldImgs.length > 0) {
+          formData.append(
+            "oldImages[]",
+            JSON.stringify({
+              colorName: variant.colorName,
+              images: oldImgs,
+            })
+          );
+        }
+      });
+
+      formData.append("removedImages", JSON.stringify(removedImagesArray));
+      await axiosInstance.put(`/edit-product/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Product updated successfully!");
+      navigate("/all-products");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update product");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -149,6 +188,7 @@ const EditProducts = () => {
         className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl mx-auto"
         encType="multipart/form-data"
       >
+        {/* Category & Subcategory */}
         <div>
           <label className="font-medium text-gray-700">Category</label>
           <select
@@ -163,7 +203,6 @@ const EditProducts = () => {
             ))}
           </select>
         </div>
-
         <div>
           <label className="font-medium text-gray-700">Sub Category</label>
           <select
@@ -179,161 +218,107 @@ const EditProducts = () => {
           </select>
         </div>
 
-        <div>
-          <label className="font-medium text-gray-700">Product Name</label>
-          <input
-            {...register("productName", { required: true })}
-            className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
-          />
-          {errors.productName && <p className="text-red-600">Required</p>}
-        </div>
-
-        <div>
-          <label className="font-medium text-gray-700">Description</label>
-          <textarea
-            {...register("description")}
-            className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
-          />
-        </div>
-         <div>
-          <label className="block  font-medium text-gray-700">
-            Product Information
-          </label>
-          <textarea
-            {...register("productinformation")}
-            placeholder="Product Information"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-          {errors.productinformation && (
-            <p className="text-red-600">Product Information is required</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block  font-medium text-gray-700">Material</label>
-          <input
-            {...register("material")}
-            placeholder="Material"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-         
-        </div>
-
-        <div>
-          <label className="block  font-medium text-gray-700">Color</label>
-          <input
-            {...register("color")}
-            placeholder="Color"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-         
-        </div>
-        <div>
-          <label className="block  font-medium text-gray-700">Seating Capacity</label>
-          <input
-            {...register("seatingCapacity")}
-            placeholder="Seating Capacity"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-         
-        </div>
-        <div>
-          <label className="block  font-medium text-gray-700">Size</label>
-          <input
-            {...register("size")}
-            placeholder="Size"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-         
-        </div>
-        <div>
-          <label className="block  font-medium text-gray-700">Brand</label>
-          <input
-            {...register("brand")}
-            placeholder="Brand"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-          
-        </div>
-        <div>
-          <label className="block  font-medium text-gray-700">Style</label>
-          <input
-            {...register("style")}
-            placeholder="Style"
-            className="border-fuchsia-500 border px-4 py-2 focus:border-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 rounded-xl w-full"
-          />
-         
-        </div>
-
-        <div>
-          <label className="font-medium text-gray-700">Price</label>
-          <input
-            type="number"
-            {...register("price", { required: true })}
-            className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
-          />
-        </div>
-
-        <div>
-          <label className="font-medium text-gray-700">Discount (%)</label>
-          <input
-            type="number"
-            {...register("discount")}
-            className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
-          />
-        </div>
-
-        <div>
-          <label className="font-medium text-gray-700">Final Price</label>
-          <input
-            readOnly
-            {...register("finalprice", { required: true })}
-            className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
-          />
-        </div>
-        <div>
-          <label className="font-medium text-gray-700">Product Images</label>
-          <div className="border-dashed border-2 border-fuchsia-500 rounded-xl p-4 text-center">
-            <input
-              type="file"
-              multiple
-              onChange={handleImageChange}
-              className="hidden"
-              id="images"
-            />
-            <label htmlFor="images" className="cursor-pointer">
-              📁 Click to upload images
+        {/* Product fields */}
+        {[
+          "productName",
+          "description",
+          "productinformation",
+          "material",
+          "seatingCapacity",
+          "size",
+          "brand",
+          "style",
+          "price",
+          "discount",
+          "finalprice",
+        ].map((f) => (
+          <div key={f}>
+            <label className="block font-medium text-gray-700">
+              {f.charAt(0).toUpperCase() + f.slice(1)}
             </label>
-            <p className="text-sm text-gray-500">Multiple files allowed</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            {previewImages.map((img, index) => (
-              <img
-                key={index}
-                src={img.local ? img.url : img.url || img}
-                alt="preview"
-                className="w-16 h-16 object-cover border border-fuchsia-300 rounded"
+            {f === "description" || f === "productinformation" ? (
+              <textarea
+                {...register(f)}
+                className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
               />
-            ))}
+            ) : (
+              <input
+                {...register(f)}
+                type={
+                  ["price", "discount", "finalprice"].includes(f)
+                    ? "number"
+                    : "text"
+                }
+                readOnly={f === "finalprice"}
+                className="border px-4 py-2 rounded-xl w-full border-fuchsia-500"
+              />
+            )}
           </div>
+        ))}
+
+        {/* Variants Section */}
+        <div className="col-span-full border p-4 rounded-xl border-fuchsia-300">
+          <h2 className="text-lg font-semibold mb-2">
+            Variants (Colors & Images)
+          </h2>
+          {variants.map((variant, index) => (
+            <div
+              key={index}
+              className="mb-4 border p-2 rounded-xl border-gray-300"
+            >
+              <input
+                type="text"
+                placeholder="Color Name"
+                value={variant.colorName}
+                onChange={(e) =>
+                  handleVariantChange(index, "colorName", e.target.value)
+                }
+                className="border px-2 py-1 w-full mb-2 rounded"
+              />
+              <input
+                type="file"
+                multiple
+                onChange={(e) => handleVariantImages(index, e.target.files)}
+                className="mb-2"
+              />
+              <div className="flex gap-2 flex-wrap">
+                {variant.images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={img.url}
+                    alt="preview"
+                    className="w-16 h-16 object-cover border rounded"
+                  />
+                ))}
+              </div>
+              {variants.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeVariant(index)}
+                  className="mt-2 px-2 py-1 bg-red-500 text-white rounded"
+                >
+                  Remove Variant
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addVariant}
+            className="px-4 py-2 bg-green-600 text-white rounded"
+          >
+            Add Variant
+          </button>
         </div>
 
-       <button
+        <button
           type="submit"
           disabled={loading}
-          className={`bg-fuchsia-700 w-50 h-12 mt-8  text-white px-4 py-2 rounded hover:bg-fuchsia-800 flex items-center justify-center gap-2 ${
+          className={`bg-fuchsia-700 w-full h-12 mt-4 text-white rounded hover:bg-fuchsia-800 flex items-center justify-center gap-2 ${
             loading ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
-          {loading ? (
-            <>
-              <span>Updating...</span>
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </>
-          ) : (
-            "Update Product"
-          )}
+          {loading ? "Updating..." : "Update Product"}
         </button>
       </form>
     </div>

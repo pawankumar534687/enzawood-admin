@@ -105,7 +105,7 @@ const AllProducts = () => {
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   <img
-                    src={item.images[0].url}
+                    src={item.variants[0]?.images[0].url}
                     alt={item.productName}
                     className="h-16 w-16 object-cover"
                   />
