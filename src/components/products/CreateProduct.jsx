@@ -300,12 +300,14 @@ const CreateProduct = () => {
                   handleVariantChange(index, "colorName", e.target.value)
                 }
                 className="border px-2 py-1 rounded w-full mb-2"
+                required
               />
               <input
                 type="file"
                 multiple
                 onChange={(e) => handleVariantImages(index, e.target.files)}
                 className="mb-2"
+                required
               />
               <div className="flex gap-2">
                 {variant.images.map((img, i) => (

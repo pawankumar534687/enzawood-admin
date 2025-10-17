@@ -112,8 +112,20 @@ const EditProducts = () => {
 
   const addVariant = () =>
     setVariants([...variants, { colorName: "", images: [] }]);
-  const removeVariant = (index) =>
+  const removeVariant = (index) => {
+    const variantToRemove = variants[index];
+
+    // 🧹 collect all uploaded images (with public_id)
+    const cloudImages = variantToRemove.images
+      .filter((img) => !img.local && img.public_id)
+      .map((img) => ({ public_id: img.public_id }));
+
+    // add them to removedImagesArray
+    setRemovedImagesArray((prev) => [...prev, ...cloudImages]);
+
+    // remove variant from state
     setVariants(variants.filter((_, i) => i !== index));
+  };
 
   const onSubmit = async (data) => {
     setLoading(true);
