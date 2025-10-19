@@ -15,6 +15,7 @@ const EditOrders = () => {
     const fetchOrderDetails = async () => {
       try {
         const response = await axiosInstance.get(`/order-details/${id}`);
+        console.log(response.data);
         setOrderdetails(response.data);
         setOrderStatus(response.data.Orderstatus);
         setPaymentStatus(response.data.paymentStatus);
@@ -141,9 +142,9 @@ const EditOrders = () => {
             🛒 Ordered Items
           </h2>
           <div className="flex flex-col items-start gap-4">
-            {orderdetails.items.map((item) => (
+            {orderdetails.items.map((item, index) => (
               <div
-                key={item._id}
+                key={item._id || index}
                 className="w-full border rounded-xl p-4 bg-slate-50 hover:shadow"
               >
                 <div className="flex items-center gap-4">
@@ -152,9 +153,16 @@ const EditOrders = () => {
                     alt={item.productName}
                     className="w-16 h-16 object-cover rounded border"
                   />
+                 
                   <div className="text-sm text-slate-700 space-y-1">
-                    <p className="font-semibold">{item.productName}</p>
+                    <p className="font-semibold text-base line-clamp-2">
+                      {item.productName}
+                    </p>
                     <p>Qty: {item.quantity}</p>
+                    <div className="flex gap-4 text-red-600">
+<p>color : </p>
+                     <p className="text-xl">{item?.colorName}</p>
+                    </div>
                     <p>Price: ₹{item.price}</p>
                     <p className="text-green-600 font-medium">
                       Total: ₹{item.quantity * item.price}
@@ -172,7 +180,7 @@ const EditOrders = () => {
         <h2 className="text-xl font-semibold text-fuchsia-600">
           Order Summary
         </h2>
-       
+
         <p>
           <strong>Item Total:</strong> ₹{orderdetails.totalAmount}
         </p>
