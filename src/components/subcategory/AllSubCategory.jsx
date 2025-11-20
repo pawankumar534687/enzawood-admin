@@ -80,6 +80,9 @@ const AllSubCategory = () => {
                 Sub Category
               </th>
               <th className="border resize-x overflow-auto border-gray-300 px-4 py-2 text-left whitespace-nowrap">
+                Sub Category id
+              </th>
+              <th className="border resize-x overflow-auto border-gray-300 px-4 py-2 text-left whitespace-nowrap">
                 Category
               </th>
               <th className="border resize-x overflow-auto border-gray-300 px-4 py-2 text-left whitespace-nowrap">
@@ -102,6 +105,9 @@ const AllSubCategory = () => {
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {item.subcategory}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {item._id}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {item.category?.category}

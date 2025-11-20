@@ -87,6 +87,10 @@ const AllCategory = () => {
               </th>
              
               <th className="border border-gray-300 px-4 py-2 text-left">
+                Category id
+              </th>
+             
+              <th className="border border-gray-300 px-4 py-2 text-left">
                 Image
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
@@ -105,6 +109,9 @@ const AllCategory = () => {
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {item.category}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {item._id}
                 </td>
                 
 
