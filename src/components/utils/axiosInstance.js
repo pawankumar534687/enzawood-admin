@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://enzawood-backend.onrender.com/api",
+  baseURL: "https://api.enzawood.com/api",
 });
 
 axiosInstance.interceptors.request.use(
