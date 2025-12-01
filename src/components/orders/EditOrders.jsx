@@ -81,11 +81,13 @@ const EditOrders = () => {
             <strong>Address:</strong> {orderdetails.customer.address},{" "}
             {orderdetails.customer.city}, {orderdetails.customer.state},{" "}
             {orderdetails.customer.country} - {orderdetails.customer.pincode}
+           
           </p>
 
           <h2 className="text-xl font-semibold pt-4 text-fuchsia-600">
             Order Info
           </h2>
+         
           <p>
             <strong>Order ID:</strong> {orderdetails.orderId}
           </p>

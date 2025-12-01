@@ -38,6 +38,9 @@ const AllUsers = () => {
                 Name
               </th>
               <th className="border resize-x overflow-auto border-gray-300 px-4 py-2 text-left whitespace-nowrap">
+                Id
+              </th>
+              <th className="border resize-x overflow-auto border-gray-300 px-4 py-2 text-left whitespace-nowrap">
                 Email
               </th>
 
@@ -55,6 +58,9 @@ const AllUsers = () => {
 
                 <td className="border border-gray-300 px-4 py-2">
                   {item.firstname} {item.lastname}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {item._id} 
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {item.email}
