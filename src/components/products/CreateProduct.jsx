@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import imageCompression from "browser-image-compression";
 
 const CreateProduct = () => {
   const [allsubcategory, setallsubcategory] = useState([]);
@@ -51,13 +52,47 @@ const CreateProduct = () => {
     setVariants(updated);
   };
 
-  const handleVariantImages = (index, files) => {
+  // const handleVariantImages = (index, files) => {
+  //   const updated = [...variants];
+  //   const previews = Array.from(files).map((file) => ({
+  //     file,
+  //     url: URL.createObjectURL(file),
+  //   }));
+  //   updated[index].images = previews;
+  //   setVariants(updated);
+  // };
+
+  const handleVariantImages = async (index, files) => {
     const updated = [...variants];
-    const previews = Array.from(files).map((file) => ({
-      file,
-      url: URL.createObjectURL(file),
-    }));
-    updated[index].images = previews;
+    const compressedImages = [];
+
+    for (let file of files) {
+      let maxSizeMB;
+
+      const fileSizeMB = file.size / (1024 * 1024);
+
+      // 🟢 Rule 1: If image is already less than 9.5MB → No compression needed
+      if (fileSizeMB <= 9.5) {
+        maxSizeMB = fileSizeMB; // keep as it is
+      }
+      // 🟡 Rule 2: If image is bigger → compress to 9.5MB
+      else {
+        maxSizeMB = 9.5;
+      }
+
+      const compressedFile = await imageCompression(file, {
+        maxSizeMB: maxSizeMB,
+        maxWidthOrHeight: 4000, // quality ko preserve karega
+        useWebWorker: true,
+      });
+
+      compressedImages.push({
+        file: compressedFile,
+        url: URL.createObjectURL(compressedFile),
+      });
+    }
+
+    updated[index].images = compressedImages;
     setVariants(updated);
   };
 

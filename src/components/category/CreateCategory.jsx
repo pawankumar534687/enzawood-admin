@@ -25,6 +25,7 @@ const CreateCategory = () => {
   };
 
   const onSubmit = async (data) => {
+    console.log(data)
      setLoading(true);
     try {
       const formData = new FormData();

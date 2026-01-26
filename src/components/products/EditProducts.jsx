@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axiosInstance from "../utils/axiosInstance";
+import imageCompression from "browser-image-compression";
 
 const EditProducts = () => {
   const [allsubcategory, setAllSubcategory] = useState([]);
@@ -96,17 +97,45 @@ const EditProducts = () => {
     setVariants(updated);
   };
 
-  const handleVariantImages = (index, files) => {
+  // const handleVariantImages = (index, files) => {
+  //   const updated = [...variants];
+  //   const previews = Array.from(files).map((file) => ({
+  //     file,
+  //     url: URL.createObjectURL(file),
+  //     local: true,
+  //   }));
+  //   updated[index].images = [
+  //     ...updated[index].images.filter((img) => !img.local),
+  //     ...previews,
+  //   ];
+  //   setVariants(updated);
+  // };
+
+  const handleVariantImages = async (index, files) => {
     const updated = [...variants];
-    const previews = Array.from(files).map((file) => ({
-      file,
-      url: URL.createObjectURL(file),
-      local: true,
-    }));
-    updated[index].images = [
-      ...updated[index].images.filter((img) => !img.local),
-      ...previews,
-    ];
+    const compressedImages = [];
+
+    for (let file of files) {
+      const options = {
+        maxSizeMB: 9.5, // Cloudinary safe limit (10MB se kam)
+        maxWidthOrHeight: 2500, // Resize for safety
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+
+      compressedImages.push({
+        file: compressedFile,
+        url: URL.createObjectURL(compressedFile),
+        local: true,
+      });
+    }
+
+    // Old images (non-local → server se aye hue)
+    const oldImages = updated[index].images.filter((img) => !img.local);
+
+    updated[index].images = [...oldImages, ...compressedImages];
+
     setVariants(updated);
   };
 
