@@ -116,7 +116,7 @@ const AllCategory = () => {
                 
 
                 <td className="border border-gray-300 px-4 py-2">
-                  <img className="w-24 h-12" src={item.image?.url} alt="" />
+                  <img loading="lazy" className="w-24 h-12" src={item.image?.url} alt="" />
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   <Link

@@ -107,6 +107,7 @@ const AllProducts = () => {
                   <img
                     src={item.variants[0]?.images[0].url}
                     alt={item.productName}
+                    loading="lazy"
                     className="h-16 w-16 object-cover"
                   />
                 </td>
