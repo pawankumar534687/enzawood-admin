@@ -8,16 +8,21 @@ import Swal from "sweetalert2";
 import axiosInstance from "../utils/axiosInstance";
 const AllProducts = () => {
   const [allproduct, setallproduct] = useState([]);
-
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
   const getallproduct = async () => {
-    const response = await axiosInstance.get("/all-product");
+    const response = await axiosInstance.get(
+      `/all-product?page=${page}&limit=10`,
+    );
     localStorage.setItem("product", response.data.length);
-    setallproduct(response.data);
+    setallproduct(response.data.allprod);
+    setTotalPage(response.data.totalpage);
+    console.log(response.data.allprod);
   };
 
   useEffect(() => {
     getallproduct();
-  }, []);
+  }, [page]);
 
   const deleteproduct = async (id) => {
     const confirm = await Swal.fire({
@@ -32,11 +37,7 @@ const AllProducts = () => {
 
     if (confirm.isConfirmed) {
       try {
-        
-        const response = await axiosInstance.delete(
-          `/product-delete/${id}`,
-         
-        );
+        const response = await axiosInstance.delete(`/product-delete/${id}`);
 
         await getallproduct();
         toast.success(response.data.message);
@@ -98,7 +99,7 @@ const AllProducts = () => {
             {allproduct.map((item, index) => (
               <tr key={item._id}>
                 <td className="border border-gray-300 px-4 py-2 text-center">
-                  {index + 1}
+                  {(page - 1) * 10 + index + 1}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {item.productName}
@@ -140,6 +141,48 @@ const AllProducts = () => {
             ))}
           </tbody>
         </table>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-4 py-1 text-sm border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {Array.from({ length: totalPage }, (_, i) => i + 1)
+            .filter(
+              (p) =>
+                p === 1 || p === totalPage || (p >= page - 1 && p <= page + 1),
+            )
+            .map((p, index, arr) => (
+              <React.Fragment key={p}>
+                {index > 0 && p - arr[index - 1] > 1 && (
+                  <span className="px-2 text-gray-500">...</span>
+                )}
+
+                <button
+                  onClick={() => setPage(p)}
+                  className={`px-3 py-1 text-sm border rounded-md transition
+            ${
+              page === p
+                ? "bg-fuchsia-600 text-white border-fuchsia-600"
+                : "bg-white hover:bg-gray-100"
+            }`}
+                >
+                  {p}
+                </button>
+              </React.Fragment>
+            ))}
+
+          <button
+            disabled={page === totalPage}
+            onClick={() => setPage(page + 1)}
+            className="px-4 py-1 text-sm border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
