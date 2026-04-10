@@ -7,17 +7,22 @@ import Swal from "sweetalert2";
 import axiosInstance from "../utils/axiosInstance";
 const ManageReview = () => {
   const [allreview, setallreview] = useState([]);
+  const [page, setpage] = useState(1)
+  const [totalpage, settotalpage] = useState(1)
+  
 
   const getallreview = async () => {
    
-    const response = await axiosInstance.get("/all-review");
-    localStorage.setItem("review", response.data.length);
-    setallreview(response.data);
+    const response = await axiosInstance.get(`/get-all-reviews?page=${page}&limit=20`);
+    localStorage.setItem("review", response.data.reviewCount);
+    setallreview(response.data.reviews);
+    settotalpage(response.data.totalpage)
+  
   };
 
   useEffect(() => {
     getallreview();
-  }, []);
+  }, [page]);
 
   const deletereview = async (id) => {
     
@@ -63,7 +68,7 @@ const ManageReview = () => {
        
       </div>
       <div className="mt-12 overflow-x-auto  rounded shadow max-h-[450px]">
-        <table className="table-auto border-collapse border border-gray-300 w-full">
+        <table className="table-auto   border-collapse border border-gray-300 w-full">
           <thead className="text-white bg-fuchsia-600 h-12 sticky top-0 z-10">
             <tr className="">
               <th className="border resize-x overflow-auto border-gray-300 px-4 py-2 text-center whitespace-nowrap">
@@ -97,7 +102,7 @@ const ManageReview = () => {
                 <td className="border border-gray-300 px-2 py-2">
                   <img
                     className="w-16 h-16"
-                    src={item.image.url}
+                    src={item.image[0].url}
                     alt={item.title}
                   />
                 </td>
@@ -116,7 +121,50 @@ const ManageReview = () => {
               </tr>
             ))}
           </tbody>
+          
         </table>
+        <div className="flex flex-wrap items-center self-center justify-center gap-2 mt-6">
+                   <button
+                     disabled={page === 1}
+                     onClick={() => setpage(page - 1)}
+                     className="px-4 py-1 text-sm border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+                   >
+                     Prev
+                   </button>
+         
+                   {Array.from({ length: totalpage }, (_, i) => i + 1)
+                     .filter(
+                       (p) =>
+                         p === 1 || p === totalpage || (p >= page - 1 && p <= page + 1),
+                     )
+                     .map((p, index, arr) => (
+                       <React.Fragment key={p}>
+                         {index > 0 && p - arr[index - 1] > 1 && (
+                           <span className="px-2 text-gray-500">...</span>
+                         )}
+         
+                         <button
+                           onClick={() => setpage(p)}
+                           className={`px-3 py-1 text-sm border rounded-md transition
+                     ${
+                       page === p
+                         ? "bg-fuchsia-600 text-white border-fuchsia-600"
+                         : "bg-white hover:bg-gray-100"
+                     }`}
+                         >
+                           {p}
+                         </button>
+                       </React.Fragment>
+                     ))}
+         
+                   <button
+                     disabled={page === totalpage}
+                     onClick={() => setpage(page + 1)}
+                     className="px-4 py-1 text-sm border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+                   >
+                     Next
+                   </button>
+                 </div>
       </div>
     </div>
   );
